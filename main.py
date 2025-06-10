@@ -1,3 +1,5 @@
+from turtledemo.penrose import start
+
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -8,7 +10,43 @@ from statsmodels.tsa.stattools import coint
 from itertools import combinations
 from pykalman import KalmanFilter
 from dask import delayed, compute
+import json
 
+file_name = input("JSON FILE NAME: ")
+json_object = json.load(open(file_name))
+
+series = {}
+corr_table = {}
+coint_table = {}
+spread_std_table = {}
+
+def __init_table__(i, j):
+    series[i] = yf.download(i, start=json_object["start"], end=json_object["end"]).dropna()
+
+    kf = KalmanFilter(
+        transition_matrices=np.eye(2),
+        observation_matrices=np.vstack([series[i].values, np.ones(len(series[i]))]).T[:, np.newaxis, :],
+        initial_state_mean=np.zeros(2),
+        em_vars=['transition_covariance', 'observation_covariance']
+    )
+
+    if i == j:
+        corr_table[i][j] = 1.0
+        coint_table[i][j] = 0.0
+    else:
+        corr_table[i][j] = series[i].corr(series[j])
+        _, coint_table[i][j], _ = coint(series[i], series[j])
+
+    try:
+        kf = kf.em(series[j].values, n_iter=5)
+        state_means, _ = kf.filter(series[j].values)
+        spread = series[i] - (state_means[:, 0] * series[j] + state_means[:, 1])
+        spread_std_table[i][j] = np.std(spread)
+    except Exception as e:
+        spread_std_table[i][j] = np.nan
+
+initialization_results = compute(*[__init_table__(i, j) for (i,j) in combinations(json_object["tickers"])])
+initialization_results_df = pd.DataFrame(initialization_results)
 
 # ==== CONFIGURATION ====
 def run_analysis(
@@ -18,51 +56,6 @@ def run_analysis(
         coint_threshold=0.05,
         plot_top_n=3
 ):
-    # 1. Download historical data
-    data = yf.download(tickers, start=start, end=end)['Adj Close']
-    data = data.dropna()
-
-    # 2. Compute all possible pairs
-    pairs = list(combinations(data.columns, 2))
-
-    # 3. Define computation per pair
-    @delayed
-    def analyze_pair(ticker1, ticker2):
-        series1 = data[ticker1]
-        series2 = data[ticker2]
-
-        # Correlation
-        corr = series1.corr(series2)
-
-        # Cointegration
-        score, pval, _ = coint(series1, series2)
-
-        # Kalman Filter estimation
-        kf = KalmanFilter(
-            transition_matrices=np.eye(2),
-            observation_matrices=np.vstack([series1.values, np.ones(len(series1))]).T[:, np.newaxis, :],
-            initial_state_mean=np.zeros(2),
-            em_vars=['transition_covariance', 'observation_covariance']
-        )
-        try:
-            kf = kf.em(series2.values, n_iter=5)
-            state_means, _ = kf.filter(series2.values)
-            spread = series2 - (state_means[:, 0] * series1 + state_means[:, 1])
-            spread_std = np.std(spread)
-        except Exception as e:
-            spread_std = np.nan
-
-        return {
-            'pair': (ticker1, ticker2),
-            'correlation': corr,
-            'cointegration_p': pval,
-            'spread_std': spread_std
-        }
-
-    # 4. Run computations with Dask
-    results = compute(*[analyze_pair(t1, t2) for t1, t2 in pairs])
-    result_df = pd.DataFrame(results)
-
     # 5. Sort and display summary
     result_df.sort_values('cointegration_p', inplace=True)
     print("Top pairs by cointegration p-value:")
