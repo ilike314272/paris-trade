@@ -1,3 +1,16 @@
+
+# Paris Trade by Leandro
+CLI Tool for All Weather or Paris trading metrics with included example configuration file.
+
+## Strategies
+Program assumes that Paris trading is associated positive correlation between two stocks and All-Weather trading is associated with negative correlation. 
+## Files
+- **main.py** Visualization and printing results
+- **data_init.py** Download prices and initialize data
+- **copula.py** Copula
+- **mean_reversion** Kalman Filtering mean reversion
+
+
     Copyright 2025 Leandro Ajo
     
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,14 +24,3 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-# Paris Trade
-CLI Tool for All Weather or Paris trading metrics with included example configuration file.
-
-## Strategies
-Program assumes that Paris trading is associated positive correlation between two stocks and All-Weather trading is associated with negative correlation. 
-## Files
-- **main.py** Visualization and printing results
-- **data_init.py** Download prices and initialize data
-- **copula.py** Copula
-- **mean_reversion** Kalman Filtering mean reversion
