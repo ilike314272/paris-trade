@@ -13,4 +13,12 @@
     limitations under the License.
 
 # Paris Trade
-Automatic correlation and cointegration analysis with Kalmann Filter and Dask. 
+CLI Tool for All Weather or Paris trading metrics with included example configuration file.
+
+## Strategies
+Program assumes that Paris trading is associated positive correlation between two stocks and All-Weather trading is associated with negative correlation. 
+## Files
+- **main.py** Visualization and printing results
+- **data_init.py** Download prices and initialize data
+- **copula.py** Copula
+- **mean_reversion** Kalman Filtering mean reversion
