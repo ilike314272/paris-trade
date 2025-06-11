@@ -1,33 +1,62 @@
-from copulas.bivariate import Clayton, Frank, Gumbel
-from copulas.univariate import GaussianKDE
-import numpy as np
 import itertools
+import numpy as np
+import dask
+from copulas.bivariate import Frank
+from copulas.univariate import GaussianKDE
 
 from data_init import *
 
-dd_pct_change = dd.from_pandas(df.pct_change().dropna(), npartitions=int(config['nparitions']))
+# Assume df is already created with yfinance adjusted close data
+returns = df.pct_change().dropna()
 
-def fit_copula(x, y):
+# === Fit KDE marginals and transform to uniform [0,1] ===
+def fit_marginals(x, y):
+    kde_x = GaussianKDE()
+    kde_y = GaussianKDE()
+    kde_x.fit(x)
+    kde_y.fit(y)
+    u = kde_x.cdf(x)
+    v = kde_y.cdf(y)
+    # Ensure values are clipped to avoid copula domain errors
+    u = np.clip(u, 1e-6, 1 - 1e-6)
+    v = np.clip(v, 1e-6, 1 - 1e-6)
+    return u, v
+
+# === Fit copula ===
+def fit_copula(u, v):
     copula = Frank()
-    data = np.column_stack(x, y)
+    data = np.column_stack([u, v])
     copula.fit(data)
     return copula
 
-def tail_prob(copula, x, y):
-    # Calculate empirical CDFs
-    u = pd.Series(x).rank(pct=True).values
-    v = pd.Series(y).rank(pct=True).values
-    tail_probs = copula.cumulative_distribution(np.column_stack([u, v]))
-    return tail_probs
+# === Get tail probabilities from copula ===
+def tail_prob(copula, u, v):
+    return copula.cumulative_distribution(np.column_stack([u, v]))
 
-def set_pair(pair):
+# === Process each ticker pair ===
+def process_pair(pair):
     a, b = pair
-    x = returns[a].values
-    y = returns[b].values
-
-    if len(x) != len(y): return None
-
-    try:
-
-    except Exception as e:
+    x = returns[a].dropna().values
+    y = returns[b].dropna().values
+    if len(x) != len(y):
+        print(f"Length mismatch: {a}-{b}")
         return None
+    try:
+        u, v = fit_marginals(x, y)
+        copula = fit_copula(u, v)
+        probs = tail_prob(copula, u, v)
+        return {
+            'type': 'copula',
+            'pair': (a, b),
+            'tail_prob': probs,
+            'copula': copula
+        }
+    except Exception as e:
+        print(f"Error processing pair {a}-{b}: {e}")
+        return None
+
+# === Build and run Dask graph ===
+pairs = list(itertools.combinations(config['tickers'], 2))
+tasks = [dask.delayed(process_pair)(pair) for pair in pairs]
+results = dask.compute(*tasks)
+copula_models = [r for r in results if r is not None]

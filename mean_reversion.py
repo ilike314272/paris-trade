@@ -32,8 +32,13 @@ def hedge_ratio(x, y):
 
 # Spread and Z_Score
 def spread_z(x, y):
-    spread = y - hedge_ratio(x, y) * x
-    return spread, (spread - spread.mean()) / spread.std()
+    ratio = hedge_ratio(x, y)
+    spread = y - ratio * x
+
+    # Drop NaN values caused by filtering or rolling
+    spread = pd.Series(spread, index=x.index).dropna()
+    z = (spread - spread.mean()) / spread.std()
+    return spread, z
 
 # Signal generation
 def generate_signals(z_score, entry=1.0, exit=0.2):
