@@ -6,10 +6,10 @@ from mean_reversion import *
 mode = config.get('mode', 'copula')
 strategies = []
 
-print("\n📊 Strategy Suggestions:")
+print("\nStrategy Suggestions:")
 
 if mode in ['copula', 'both']:
-    print("\n🔗 Copula-Based Strategies:")
+    print("\nCopula-Based Strategies:")
     for model in copula_models:
         a, b = model['pair']
         tail_prob_mean = model['tail_prob'].mean()
@@ -19,7 +19,7 @@ if mode in ['copula', 'both']:
             strategies.append(('paris', a, b, tail_prob_mean, 'copula'))
 
 if mode in ['mean_reversion', 'both']:
-    print("\n🔁 Mean-Reversion Strategies (Kalman):")
+    print("\nMean-Reversion Strategies (Kalman):")
     for i in range(len(config['tickers'])):
         for j in range(i + 1, len(config['tickers'])):
             a, b = config['tickers'][i], config['tickers'][j]
@@ -36,7 +36,7 @@ for strat in strategies:
 # === Visualize All Strategies ===
 if strategies:
     for idx, (stype, a, b, metric, source) in enumerate(strategies):
-        print(f"\n🚀 Backtesting Strategy #{idx + 1} on {a}-{b} ({stype}, source={source})")
+        print(f"\nBacktesting Strategy #{idx + 1} on {a}-{b} ({stype}, source={source})")
 
         x, y = returns[a], returns[b]
         spread, z = spread_z(x, y)
@@ -71,4 +71,4 @@ if strategies:
         plt.tight_layout()
         plt.show()
 else:
-    print("❌ No valid strategy pairs found.")
+    print("No valid strategy pairs found.")

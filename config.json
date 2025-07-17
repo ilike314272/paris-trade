@@ -1,5 +1,5 @@
 {
-  "tickers": ["AAPL", "MSFT", "GOOG", "AMZN"],
+  "tickers": ["INTC", "AMD", "NVDA"],
   "start": "2022-01-01",
   "end": "2024-01-01",
   "npartitions": 4,
