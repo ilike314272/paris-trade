@@ -3,16 +3,6 @@ from pykalman import KalmanFilter
 
 from data_init import *
 
-# Strategies to implement based on correlations
-strat = []
-for i in range(len(config['tickers'])):
-    for j in range(i+1, len(config['tickers'])):
-        corr = m_corr.iloc[i,j]
-        if corr > config['threshold+']:
-            strat.append(('paris', config['tickers'][i], config['tickers'][j], corr))
-        elif corr < config['threshold-']:
-            strat.append(('all weather', config['tickers'][i], config['tickers'][j], corr))
-
 # Hedge ratio with Kalman Filter
 def hedge_ratio(x, y):
     delta = 1e-5
