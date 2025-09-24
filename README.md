@@ -1,6 +1,7 @@
 
 # Paris Trade by Leandro
-CLI Tool for All Weather or Paris trading metrics with included example configuration file.
+## Run the program
+`streamlit run main.py`
 
 ## Strategies
 Program assumes that Paris trading is associated positive correlation between two stocks and All-Weather trading is associated with negative correlation. 
