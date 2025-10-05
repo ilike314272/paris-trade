@@ -1,9 +1,0 @@
-{
-  "tickers": ["INTC", "AMD", "NVDA"],
-  "start": "2022-01-01",
-  "end": "2024-01-01",
-  "npartitions": 4,
-  "threshold+": 0.35,
-  "threshold-": -0.35,
-  "mode": "both"
-}

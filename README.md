@@ -1,16 +1,5 @@
 
 # Paris Trade by Leandro
-## Run the program
-`streamlit run main.py`
-
-## Strategies
-Program assumes that Paris trading is associated positive correlation between two stocks and All-Weather trading is associated with negative correlation. 
-## Files
-- **main.py** Visualization and printing results
-- **data_init.py** Download prices and initialize data
-- **copula.py** Copula
-- **mean_reversion** Kalman Filtering mean reversion
-
 
     Copyright 2025 Leandro Ajo
     
