@@ -1,5 +1,8 @@
-
 # Paris Trade by Leandro
+
+Run it:
+`pip install -r requirements.txt`
+`python -m streamlit main.py`
 
     Copyright 2025 Leandro Ajo
     
